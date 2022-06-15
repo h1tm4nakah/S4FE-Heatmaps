@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Dynamic heatmaps S4FE s.r.l. </title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+      body, html, h2 { margin:10px; padding:0; height:100%;font-family: 'Roboto Mono', monospace;}
+      h2 { margin: 0px; margin-top: 10px; }
+      #heatmapContainer { 
+        width:100%; 
+        height:100%;
+        border: 1px solid grey;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="heatmapContainer" style="width:100px; height:100px;">
+
+    </div>
+    <h2>Intervallo: <span id="start"></span> - <span id="end"></span></h2>
+
+    <script src="js/heatmap.js"></script>
+    <script src="../output_animated.json"></script>
+<script>
+  window.onload = function() {
+    const start_span = document.getElementById("start");
+    const end_span = document.getElementById("end");
+    let v = 0;
+
+    // boundaries for data generation
+    var width = data.width;
+    var height = data.height;
+    document.getElementById('heatmapContainer').style.width = width + "px";
+    document.getElementById('heatmapContainer').style.height = height + "px";
+
+    var heatmap = h337.create({
+      container: document.getElementById('heatmapContainer'),
+      gradient: { 
+        0.3: "rgba(183,209,112, 1)", 
+        0.5: "rgba(230,222,103, 1)", 
+        0.9: 'rgba(217,51,110,1)'
+      },
+      maxOpacity: .8,
+      blur: 1
+    });
+
+    var generate = function() {
+      // Generate grid
+      const step = 30;
+      const no_grids_x = width / step;
+      const no_grids_y = height / step;
+
+      // Generate point matrix
+      var final_data = [];
+
+      t = data.data[v].points;
+      start_span.textContent = data.data[v].start.split(" ")[1];
+      end_span.textContent = data.data[v].end.split(" ")[1];
+      console.log(data.data[v].start, data.data[v].end);
+
+      for(var i=0; i<no_grids_x; i++) {
+        min_x = i*step;
+        max_x = (i+1)*step;
+        for(var j=0; j<no_grids_y; j++) {
+          min_y = j*step;
+          max_y = (j+1)*step;
+          value = 0;
+          t.forEach(p => {
+            if(p[0] >= min_x && p[0] < max_x && p[1] >= min_y && p[1] < max_y) {
+              value++;
+            }
+          });
+          final_data.push({ x: (min_x + (step / 2)), y: (min_y + (step / 2)), value: value, radius: step })
+        }
+      }
+
+
+      heatmap.setData({
+        min: 0,
+        max: 50,
+        data: final_data
+      });
+
+    }
+
+    setTimeout(function test() {
+      generate();
+      v++;
+      setTimeout(test, 100);
+    }, 100);
+  };
+</script>
+  </body>
+</html>

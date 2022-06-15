@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Static heatmaps S4FE s.r.l.</title>
+    <style>
+      body, html, h2 { margin:30; padding:0; height:100%;}
+      #heatmapContainer { 
+        width:100%; 
+        height:100%;
+        border: 1px solid black;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="heatmapContainer" style="width:100px; height:100px;">
+
+    </div>
+    <script src="js/heatmap.js"></script>
+    <script src="../output.json"></script>
+    <script>
+      window.onload = function() {
+        // helper function
+        function $(id) {
+          return document.getElementById(id);
+        };
+
+        console.log(data);
+        // boundaries for data generation
+        var width = data.width;
+        var height = data.height;
+        document.getElementById('heatmapContainer').style.width = width + "px";
+        document.getElementById('heatmapContainer').style.height = height + "px";
+
+        var heatmap = h337.create({
+          container: document.getElementById('heatmapContainer'),
+          gradient: { 
+            0.3: "rgba(183,209,112, 1)", 
+            0.5: "rgba(230,222,103, 1)", 
+            0.9: 'rgba(217,51,110,1)'
+          },
+          maxOpacity: .8,
+          blur: 1
+        });
+
+        // Unpack points
+        t = []
+        data.data.forEach(point_line => {
+          point_line.forEach(p => {
+            // t.push({ x: p[0], y: p[1], value: 1, radius: 15 })
+            t.push(p);
+          })
+        })
+
+        // Generate grid
+        const step = 30;
+        const no_grids_x = width / step;
+        const no_grids_y = height / step;
+
+        // Generate point matrix
+        var final_data = [];
+        let peek_max = 0;
+        let peek_avg = 0;
+
+        for(var i=0; i<no_grids_x; i++) {
+          min_x = i*step;
+          max_x = (i+1)*step;
+          for(var j=0; j<no_grids_y; j++) {
+            min_y = j*step;
+            max_y = (j+1)*step;
+            value = 0;
+            t.forEach(p => {
+              if(p[0] >= min_x && p[0] < max_x && p[1] >= min_y && p[1] < max_y) {
+                value++;
+              }
+            });
+            if (value > peek_max) peek_max = value;
+            peek_avg += value;
+            final_data.push({ x: (min_x + (step / 2)), y: (min_y + (step / 2)), value: value, radius: step })
+          }
+        } 
+
+        peek_avg /= step * step;
+
+        console.log("peek max", peek_max);
+        console.log("peek avg", peek_avg);
+
+        heatmap.setData({
+          min: 0,
+          max: 1000,
+          data: final_data
+        });
+
+        var canvas = document.getElementsByClassName('heatmap-canvas')[0];
+        var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");  
+        window.location.href=image;
+
+      };
+    </script>
+  </body>
+</html>

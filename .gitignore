@@ -1,0 +1,6 @@
+data/*
+.DS_Store
+output/*
+*.json
+venv/*
+output_bb/*
